@@ -28,7 +28,25 @@ import utils
 import time
 
 
-list_of_classes = ['background', 'missing', 'bite', 'open', 'short', 'spur', 'spurious']
+list_of_classes = [
+    '__background__', 'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
+    'train', 'truck', 'boat', 'traffic light', 'fire hydrant', 'N/A', 'stop sign',
+    'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow',
+    'elephant', 'bear', 'zebra', 'giraffe', 'N/A', 'backpack', 'umbrella', 'N/A', 'N/A',
+    'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball',
+    'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard', 'tennis racket',
+    'bottle', 'N/A', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl',
+    'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza',
+    'donut', 'cake', 'chair', 'couch', 'potted plant', 'bed', 'N/A', 'dining table',
+    'N/A', 'N/A', 'toilet', 'N/A', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell phone',
+    'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'N/A', 'book',
+    'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush'
+]
+
+#list_of_classes = ['background', 'missing', 'bite', 'open', 'short', 'spur', 'spurious']
+
+
+
 def plot_img_bbox(img, target, img2, target2, scores):
     # plot the image and bboxes
     # Bounding boxes are defined as follows: x-min y-min width height
@@ -82,9 +100,9 @@ def get_object_detection_model(num_classes):
     #model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
     model = torchvision.models.detection.fasterrcnn_mobilenet_v3_large_320_fpn(pretrained=True)
     # get number of input features for the classifier
-    in_features = model.roi_heads.box_predictor.cls_score.in_features
+    #in_features = model.roi_heads.box_predictor.cls_score.in_features
     # replace the pre-trained head with a new one
-    model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
+    #model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
 
     return model
 
@@ -134,17 +152,17 @@ while True:
     print('t2 ', time.time() - t2)
 
     t3 = time.time()
-
     frame = 255*img.numpy().transpose((1,2,0))
     frame = np.ascontiguousarray(frame, dtype=np.uint8)
     for i in range(len(prediction['boxes'])):
         score = prediction['scores'][i].item()
-        if score > 0.0:
+        if score > 0.5:
             x = int(prediction['boxes'][i][0].item())
             y = int(prediction['boxes'][i][1].item())
             w = int(prediction['boxes'][i][2].item())
             h = int(prediction['boxes'][i][2].item())
             frame = cv2.rectangle(frame, (x,y), (w,h), (0,255,0), 3)
+            cv2.putText(frame, list_of_classes[i], (x,y-10), cv2.FONT_HERSHEY_COMPLEX,0.5,(0,0,0),1)
 
     print('t3 ', time.time() - t3)
     cv2.imshow('Face Detector', frame)
@@ -156,4 +174,3 @@ while True:
 
 video.release()
 cv2.destroyAllWindows()
-
