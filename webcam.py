@@ -25,6 +25,7 @@ from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 
 # these are the helper libraries imported.
 import utils
+import time
 
 
 list_of_classes = ['background', 'missing', 'bite', 'open', 'short', 'spur', 'spurious']
@@ -78,7 +79,8 @@ num_classes = 7
 def get_object_detection_model(num_classes):
 
     # load a model pre-trained pre-trained on COCO
-    model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
+    #model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
+    model = torchvision.models.detection.fasterrcnn_mobilenet_v3_large_320_fpn(pretrained=True)
     # get number of input features for the classifier
     in_features = model.roi_heads.box_predictor.cls_score.in_features
     # replace the pre-trained head with a new one
@@ -95,7 +97,7 @@ model = get_object_detection_model(num_classes)
 
 # move model to the right device
 model.to(device)
-model = model.double()
+model = model.float()
 
 def apply_nms(orig_prediction, iou_thresh=0.5):
 
@@ -113,41 +115,38 @@ def apply_nms(orig_prediction, iou_thresh=0.5):
 def torch_to_pil(img):
     return torchtrans.ToPILImage()(img).convert('RGB')
 
-'''
-for i in range(3,6):
-    # pick one image from the test set
-    img, target = dataset_test[i]
-    # put the model in evaluation mode
-    model.eval()
-    with torch.no_grad():
-        prediction = model([img.to(device)])[0]
-
-    nms_prediction = apply_nms(prediction, iou_thresh=0.5)
-    scores = prediction['scores']
-
-    plot_img_bbox(torch_to_pil(img), target,torch_to_pil(img), prediction, scores)
-'''
-
 model.eval()
-
 #STREAM WEBCAM
 video = cv2.VideoCapture(0);
 while True:
+    t0 = time.time()
     check, frame = video.read();
+    print('t0 ', time.time()-t0)
 
+    t1 = time.time()
     img = frame/255
-    img = torch.tensor(img.transpose((2,0,1))).double()
+    img = torch.tensor(img.transpose((2,0,1))).float()
+    print('t1 ', time.time() - t1)
+
+    t2 = time.time()
     with torch.no_grad():
         prediction = model([img.to(device)])[0]
-    nms_prediction = apply_nms(prediction, iou_thresh=0.5)
+    print('t2 ', time.time() - t2)
 
-    for i in range(len(nms_prediction['boxes'])):
-        x = int(nms_prediction['boxes'][i][0].item())
-        y = int(nms_prediction['boxes'][i][1].item())
-        w = int(nms_prediction['boxes'][i][2].item())
-        h = int(nms_prediction['boxes'][i][2].item())
-        frame = cv2.rectangle(frame, (x,y), (w,h), (0,255,0), 3)
+    t3 = time.time()
 
+    frame = 255*img.numpy().transpose((1,2,0))
+    frame = np.ascontiguousarray(frame, dtype=np.uint8)
+    for i in range(len(prediction['boxes'])):
+        score = prediction['scores'][i].item()
+        if score > 0.0:
+            x = int(prediction['boxes'][i][0].item())
+            y = int(prediction['boxes'][i][1].item())
+            w = int(prediction['boxes'][i][2].item())
+            h = int(prediction['boxes'][i][2].item())
+            frame = cv2.rectangle(frame, (x,y), (w,h), (0,255,0), 3)
+
+    print('t3 ', time.time() - t3)
     cv2.imshow('Face Detector', frame)
 
     key = cv2.waitKey(1)
