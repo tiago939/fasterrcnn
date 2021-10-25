@@ -62,7 +62,7 @@ class ImagesDataset(torch.utils.data.Dataset):
 
         # annotation file
         annot_filename = img_name[:-4] + '.xml'
-        annot_file_path = os.path.join(  './PCB_DATASET/labels_all/' , annot_filename)
+        annot_file_path = os.path.join(  '/content/train' , annot_filename)
 
         boxes = []
         labels = []
@@ -193,8 +193,8 @@ def get_transform(train):
                         ], bbox_params={'format': 'pascal_voc', 'label_fields': ['labels']})
 
 # defining the files directory and testing directory
-files_dir = './PCB_DATASET/images_all/'
-test_dir ='./PCB_DATASET/images_all/'
+files_dir = '/content/train'
+test_dir ='/content/test'
 
 # use our dataset and defined transformations
 dataset = ImagesDataset(files_dir, 480, 480, transforms= get_transform(train=True))
@@ -213,11 +213,11 @@ dataset_test = torch.utils.data.Subset(dataset_test, indices[-tsize:])
 
 # define training and validation data loaders
 data_loader = torch.utils.data.DataLoader(
-    dataset, batch_size=5, shuffle=True, num_workers=0,
+    dataset, batch_size=4, shuffle=True, num_workers=0,
     collate_fn=utils.collate_fn)
 
 data_loader_test = torch.utils.data.DataLoader(
-    dataset_test, batch_size=5, shuffle=False, num_workers=0,
+    dataset_test, batch_size=4, shuffle=False, num_workers=0,
     collate_fn=utils.collate_fn)
 
 device='cuda'
@@ -232,14 +232,14 @@ model.to(device)
 params = [p for p in model.parameters() if p.requires_grad]
 optimizer = torch.optim.Adam(params, lr=0.0001)
 
-checkpoint = torch.load('./checkpoint/ckpt.pth',map_location='cpu')
-model.load_state_dict(checkpoint['model_state_dict'])
-optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+#checkpoint = torch.load('./checkpoint/ckpt.pth',map_location='cpu')
+#model.load_state_dict(checkpoint['model_state_dict'])
+#optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
 #lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer,step_size=3,gamma=0.1)
 
 # training for 10 epochs
-num_epochs = 32
+num_epochs = 10
 
 for epoch in range(num_epochs):
     # training for one epoch
