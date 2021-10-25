@@ -168,7 +168,8 @@ def plot_img_bbox(img, target):
 def get_object_detection_model(num_classes):
 
     # load a model pre-trained pre-trained on COCO
-    model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
+    #model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
+    model = torchvision.models.detection.fasterrcnn_mobilenet_v3_large_320_fpn(pretrained=True)
 
     # get number of input features for the classifier
     in_features = model.roi_heads.box_predictor.cls_score.in_features
@@ -236,9 +237,7 @@ optimizer = torch.optim.Adam(params, lr=0.0001)
 #model.load_state_dict(checkpoint['model_state_dict'])
 #optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
-#lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer,step_size=3,gamma=0.1)
-
-# training for 10 epochs
+# training
 num_epochs = 10
 
 for epoch in range(num_epochs):
